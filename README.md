@@ -3,11 +3,7 @@
 
 Ce document décrit les étapes pour configurer un serveur VPN WireGuard permettant à des clients VPN d’accéder à un serveur applicatif distinct via une redirection. Les règles UFW garantiront que seules les machines connectées au VPN auront accès au serveur applicatif, hébergé sous Apache2. Les étapes incluent également des consignes de sécurité pour limiter l’accès SSH aux clients VPN.
 
-## Prérequis
-- **Environnement** : Machines sous VMware, connectées au réseau `192.168.179.0`
-- **Serveur VPN WireGuard** : IP du VPN en `10.0.0.0`
-- **Serveur Applicatif** : Héberge Apache2
-- **Firewall** : UFW pour restreindre les accès
+
 
 ## Sommaire
 1. [Installation du Serveur VPN WireGuard](#1-installation-du-serveur-vpn-wireguard)
@@ -54,12 +50,29 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
      [Peer]
      PublicKey = [clé publique du client]
      AllowedIPs = 10.0.0.2/32
+  
+      - Configuer le serveur pour router les paquets vers le serveur Applicatif
+      - Acceder à ```/etc/sysctl.conf``` et decommenter la ligne ```net.ipv4`.ip_forward = 1```
+      - Routage pour pouvoir acceder à distance
      ```
-
+      *nat
+     :POSTROUTING ACCEPT [0:0]
+     -A POSTROUTING -o ens33 -j MASQUERADE
+     COMMIT
+      ```
+      - Routage pour pouvoir acceder à distance editer le fichier /etc/ufw/before.rules
+     ```
+     -A ufw-before-forward -s 10.0.0.1/24 -j ACCEPT
+     -A ufw-before-forward -d 10.0.0.1/24 -j ACCEPT
+     -A ufw-before-forward -s Reseau_Interne/24 -j ACCEPT
+     -A ufw-before-forward -d Reseau_Internet/24 -j ACCEPT
+      ```
+      
 4. **Démarrage de WireGuard** :
    ```bash
    sudo systemctl enable wg-quick@wg0
    sudo systemctl start wg-quick@wg0
+   wg-quick up wg0
    ```
 
 ## 2. Configuration et Installation du Client VPN
@@ -141,6 +154,4 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
    - Pour éviter une perte d’accès SSH en cas de problème VPN, configurez une clé SSH pour un utilisateur d’urgence avec accès direct.
    - Documentez le processus de redémarrage manuel de WireGuard et assurez un accès physique ou un autre point d’entrée sécurisé pour les administrateurs.
 
----
 
-**Note** : Adaptez les configurations et les règles en fonction de votre environnement et de la politique de sécurité de votre organisation.

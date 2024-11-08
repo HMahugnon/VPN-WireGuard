@@ -38,18 +38,12 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
      ListenPort = 51820
      PrivateKey = [clé privée du serveur]
 
-     # Règle de redirection vers le serveur applicatif
-     PostUp = iptables -A FORWARD -i wg0 -o ens192 -j ACCEPT
-     PostUp = iptables -A FORWARD -o wg0 -i ens192 -j ACCEPT
-     PostUp = iptables -t nat -A POSTROUTING -o ens192 -j MASQUERADE
-     PostDown = iptables -D FORWARD -i wg0 -o ens192 -j ACCEPT
-     PostDown = iptables -D FORWARD -o wg0 -i ens192 -j ACCEPT
-     PostDown = iptables -t nat -D POSTROUTING -o ens192 -j MASQUERADE
 
      # Connexions des clients VPN
      [Peer]
      PublicKey = [clé publique du client]
      AllowedIPs = 10.0.0.2/32
+     ```
   
       - Configuer le serveur pour router les paquets vers le serveur Applicatif
       - Acceder à ```/etc/sysctl.conf``` et decommenter la ligne ```net.ipv4`.ip_forward = 1```

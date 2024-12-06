@@ -34,15 +34,26 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
    - Configurez le fichier `/etc/wireguard/wg0.conf` :
      ```ini
      [Interface]
-     Address = 10.0.0.1/24
-     ListenPort = 51820
-     PrivateKey = [clé privée du serveur]
+ Configuration du serveur VPN
+Address = 10.0.0.1/24
+ListenPort = 51820
+PrivateKey = <CLEF_PRIVÉE_SERVEUR>
+Activer le forwarding et le NAT
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
+PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 
-     # Connexions des clients VPN
-     [Peer]
-     PublicKey = [clé publique du client]
-     AllowedIPs = 10.0.0.2/32
+[Peer]
+PublicKey = <CLÉ_PUBLIQUE_SERVEUR_A>
+PresharedKey = <CLÉ_PRÉ_PARTAGÉE>
+AllowedIPs = 10.0.0.2/32
+
+[Peer]
+PublicKey = <CLÉ_PUBLIQUE_SERVEUR_B>
+PresharedKey = <CLÉ_PRÉ_PARTAGÉE>
+AllowedIPs = 10.0.0.3/32
      ```
   
       - Configuer le serveur pour router les paquets vers le serveur Applicatif

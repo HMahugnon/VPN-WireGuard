@@ -56,21 +56,15 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
      ```
   
       - Configuer le serveur pour router les paquets vers le serveur Applicatif
-      - Acceder à ```/etc/sysctl.conf``` et decommenter la ligne ```net.ipv4`.ip_forward = 1```
-      - Routage pour pouvoir acceder à distance
-     ```
-      *nat
-     :POSTROUTING ACCEPT [0:0]
-     -A POSTROUTING -o ens33 -j MASQUERADE
-     COMMIT
-      ```
-      - Routage pour pouvoir acceder à distance editer le fichier /etc/ufw/before.rules
-     ```
-     -A ufw-before-forward -s 10.0.0.1/24 -j ACCEPT
-     -A ufw-before-forward -d 10.0.0.1/24 -j ACCEPT
-     -A ufw-before-forward -s Reseau_Interne/24 -j ACCEPT
-     -A ufw-before-forward -d Reseau_Internet/24 -j ACCEPT
-      ```
+      ```bash
+      # Activer le forwarding IP
+      sudo bash -c 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
+      sudo sysctl -p
+
+      # Configuration du pare-feu
+      sudo ufw allow 51820/udp
+      sudo ufw enable```
+     
       
 4. **Démarrage de WireGuard** :
    ```bash
@@ -80,7 +74,7 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
    ```
 
 ## 2. Configuration et Installation du Client VPN
-1. **Installer WireGuard sur le client** :
+1. **Installer WireGuard sur le client ou sur le serveur Applicatif** :
    ```bash
    sudo apt install wireguard -y
    ```
@@ -90,7 +84,7 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
    wg genkey | tee /etc/wireguard/client_private.key | wg pubkey > /etc/wireguard/client_public.key
    ```
 
-3. **Configurer le client** dans `/etc/wireguard/wg0.conf` :
+3. **Configurer le client ou des serveur distants** dans `/etc/wireguard/wg0.conf` :
    ```ini
    [Interface]
    Address = 10.0.0.2/24
@@ -99,8 +93,7 @@ Ce document décrit les étapes pour configurer un serveur VPN WireGuard permett
    [Peer]
    PublicKey = [clé publique du serveur]
    Endpoint = [IP publique du serveur VPN]:51820
-   AllowedIPs = 192.168.179.0/24
-   PersistentKeepalive = 25
+   AllowedIPs = 10.0.0.0/24,0.0.0.0/0
    ```
 
 4. **Démarrer WireGuard sur le client** :
